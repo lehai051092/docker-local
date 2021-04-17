@@ -8,10 +8,11 @@
 - docker/nginx/site-enable/...conf
 
 upstream fastcgi_backend {
-    server phpfpm7.3:9000;
+    server php73:9000;
 }
 
 server {
+
     listen       80;
     listen       443;
     server_name  <site_name>;
@@ -20,6 +21,36 @@ server {
     set $PHP fastcgi_backend;
     set $MAGE_DEBUG_SHOW_ARGS 1;
     include /etc/nginx/snippest/magento2-php.conf;
+}
+
+# Config nginx Laravel
+
+server {
+
+    listen 80;
+    listen 443;
+    index index.php index.html;
+    error_log  /var/log/nginx/error.log;
+    access_log /var/log/nginx/access.log;
+    root /var/www/html/folder-site/public;
+
+    location ~ \.php$ {
+    try_files $uri =404;
+    fastcgi_split_path_info ^(.+\.php)(/.+)$;
+    fastcgi_pass php73:9000;
+    fastcgi_index index.php;
+    include fastcgi_params;
+    fastcgi_param SCRIPT_FILENAME $document_root$fastcgi_script_name;
+    fastcgi_param PATH_INFO $fastcgi_path_info;
+
+    }
+
+    location / {
+
+        try_files $uri $uri/ /index.php?$query_string;
+        gzip_static on;
+
+    }
 }
 
 # Tạo xong restart lại nginx và php
