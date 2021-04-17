@@ -63,6 +63,16 @@ services:
       - 8025:8025 # web ui
     networks:
       - dev-network
+  elasticsearch:
+    image: elasticsearch:7.7.1
+    ports:
+      - "9300:9300"
+      - "9200:9200"
+    environment:
+      discovery.type: single-node
+    networks:
+      - dev-network
+    container_name: elasticsearch
 networks:
   dev-network:
     driver: bridge

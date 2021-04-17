@@ -57,3 +57,9 @@ server {
 # Tạo xong restart lại nginx và php
 - docker restart nginx
 - docker restart php73
+
+# Config và test Elasticsearch local
+- Stores -> Configuration -> Catalog -> Catalog -> Catalog Search
+- bin/magento indexer:reindex catalogsearch_fulltext 
+- bin/magento cache:flush
+- $ curl -XGET 'localhost:9200/_search?size=1' -H 'Content-Type:application/json' -d '{ "query": { "match_all": {} } }'
