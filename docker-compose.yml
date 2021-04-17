@@ -40,7 +40,7 @@ services:
     volumes:
       - ./mariadb/custom.cnf:/etc/mysql/conf.d/custom.cnf:cached
       - ./mariadb/setup.sql:/setup.sql:cached
-      - ./mariadb/data:/var/lib/mysql:delegated
+      - ./data/mariadb:/var/lib/mysql:delegated
     networks:
       - dev-network
     container_name: mariadb
@@ -72,7 +72,7 @@ services:
     environment:
       discovery.type: single-node
     volumes:
-      - ./data/elastic_data:/usr/share/elasticsearch/data
+      - ./data/elasticsearch:/usr/share/elasticsearch/data
     networks:
       - dev-network
     container_name: elasticsearch
