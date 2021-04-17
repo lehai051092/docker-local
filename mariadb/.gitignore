@@ -1,3 +1,4 @@
 *
 !.gitignore
 !/setup.sql
+!/custom.cnf
