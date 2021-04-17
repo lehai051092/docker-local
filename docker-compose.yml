@@ -1,0 +1,68 @@
+version: '3.7'
+services:
+  nginx:
+    image: nginx
+    restart: always
+    depends_on:
+      - php73
+    ports:
+      - "80:80"
+      - "443:443"
+    container_name: nginx
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf
+      - ./nginx/sites-enabled:/etc/nginx/conf.d
+      - ./nginx/snipest:/etc/nginx/snippest
+      - ./www:/var/www/html
+    logging:
+      options:
+        max-size: 10m
+    networks:
+      - dev-network
+  php73:
+    build:
+      context: ./php
+    restart: always
+    volumes:
+      - ./www:/var/www/html
+    ports:
+      - "9000:9000"
+    container_name: php73
+    networks:
+      - dev-network
+  mariadb:
+    image: mariadb:${MARIADB_VERSION}
+    restart: always
+    environment:
+      - MYSQL_ROOT_PASSWORD=${MYSQL_ROOT_PASSWORD}
+      - MYSQL_ALLOW_EMPTY_PASSWORD=no
+    command: --init-file /setup.sql
+    volumes:
+      - ./mariadb/custom.cnf:/etc/mysql/conf.d/custom.cnf:cached
+      - ./mariadb/setup.sql:/setup.sql:cached
+      - ./mariadb/data:/var/lib/mysql:delegated
+    networks:
+      - dev-network
+    container_name: mariadb
+  mailhog:
+    image: mailhog/mailhog
+    hostname: mailhog
+    container_name: mailhog
+    restart: always
+    user: root # Needed if using maildir
+    environment:
+      MH_STORAGE: maildir
+      MH_MAILDIR_PATH: /var/data/mailhog
+    volumes:
+      - ./data/mailhog:/var/data/mailhog
+    expose:
+      - "1025" # SMTP Server to send mail
+      - "8025" # HTTP Server to check mail
+    ports:
+      - 1025:1025 # smtp server
+      - 8025:8025 # web ui
+    networks:
+      - dev-network
+networks:
+  dev-network:
+    driver: bridge
