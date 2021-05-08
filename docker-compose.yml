@@ -1,81 +1,97 @@
 version: '3.7'
 services:
-  nginx:
-    image: nginx
-    restart: always
-    depends_on:
-      - php73
-    ports:
-      - "80:80"
-      - "443:443"
-    container_name: nginx
-    volumes:
-      - ./nginx/nginx.conf:/etc/nginx/nginx.conf
-      - ./nginx/sites-enabled:/etc/nginx/conf.d
-      - ./nginx/snipest:/etc/nginx/snippest
-      - ./www:/var/www/html
-    logging:
-      options:
-        max-size: 10m
-    networks:
-      - dev-network
-  php73:
-    build:
-      context: ./php
-    restart: always
-    volumes:
-      - ./www:/var/www/html
-    ports:
-      - "9000:9000"
-    container_name: php73
-    networks:
-      - dev-network
-  mariadb:
-    image: mariadb:${MARIADB_VERSION}
-    restart: always
-    environment:
-      - MYSQL_ROOT_PASSWORD=${MYSQL_ROOT_PASSWORD}
-      - MYSQL_ALLOW_EMPTY_PASSWORD=no
-    command: --init-file /setup.sql
-    volumes:
-      - ./mariadb/custom.cnf:/etc/mysql/conf.d/custom.cnf:cached
-      - ./mariadb/setup.sql:/setup.sql:cached
-      - ./data/mariadb:/var/lib/mysql:delegated
-    networks:
-      - dev-network
-    container_name: mariadb
-  mailhog:
-    image: mailhog/mailhog
-    hostname: mailhog
-    container_name: mailhog
-    restart: always
-    user: root # Needed if using maildir
-    environment:
-      MH_STORAGE: maildir
-      MH_MAILDIR_PATH: /var/data/mailhog
-    volumes:
-      - ./data/mailhog:/var/data/mailhog
-    expose:
-      - "1025" # SMTP Server to send mail
-      - "8025" # HTTP Server to check mail
-    ports:
-      - 1025:1025 # smtp server
-      - 8025:8025 # web ui
-    networks:
-      - dev-network
-  elasticsearch:
-    image: elasticsearch:7.7.1
-    restart: always
-    ports:
-      - "9300:9300"
-      - "9200:9200"
-    environment:
-      discovery.type: single-node
-    volumes:
-      - ./data/elasticsearch:/usr/share/elasticsearch/data
-    networks:
-      - dev-network
-    container_name: elasticsearch
+    nginx:
+        image: mskumji5/nginx
+        restart: always
+        depends_on:
+            - php
+        ports:
+            - "80:80"
+            - "443:443"
+        container_name: nginx
+        volumes:
+            - ./nginx/nginx.conf:/etc/nginx/nginx.conf
+            - ./nginx/sites-enabled:/etc/nginx/conf.d
+            - ./nginx/snipest:/etc/nginx/snippest
+            - ./www:/var/www/html
+        logging:
+            options:
+                max-size: 10m
+        networks:
+            - dev-network
+    php:
+        image: mskumji5/php-fpm:${PHP_VERSION}
+        restart: always
+        volumes:
+            - ./www:/var/www/html
+            - ./php/php-custom.ini:/usr/local/etc/php/conf.d/custom.ini
+            - ./php/smtp:/etc/msmtprc
+        ports:
+            - "9000:9000"
+        container_name: php
+        environment:
+            FPM_LISTEN_DEFAULT: 1
+        networks:
+            - dev-network
+    cli:
+        image: mskumji5/php-cli:${PHP_VERSION}
+        networks:
+            - dev-network
+        volumes_from:
+            - php
+        volumes:
+            - ~/.composer:/home/dev/.composer
+            - ~/.ssh:/home/dev/.ssh
+        user: dev
+        tty: true
+        stdin_open: true
+        restart: always
+        container_name: cli
+    mariadb:
+        image: mariadb:${MARIADB_VERSION}
+        restart: always
+        environment:
+            - MYSQL_ROOT_PASSWORD=${MYSQL_ROOT_PASSWORD}
+            - MYSQL_ALLOW_EMPTY_PASSWORD=no
+        command: --init-file /setup.sql
+        volumes:
+            - ./mariadb/custom.cnf:/etc/mysql/conf.d/custom.cnf:cached
+            - ./mariadb/setup.sql:/setup.sql:cached
+            - ./data/mariadb:/var/lib/mysql:delegated
+        networks:
+            - dev-network
+        container_name: mariadb
+    adminer:
+        image: adminer
+        environment:
+            ADMINER_PLUGINS: tables-filter json-column table-indexes-structure
+        ports:
+            - 81:8080
+        networks:
+            - dev-network
+        restart: unless-stopped
+        container_name: adminer
+    maildev:
+        image: dominikserafin/maildev
+        ports:
+            - 82:1080
+        networks:
+            - dev-network
+        restart: always
+        container_name: maildev
+#    elasticsearch:
+#        image: elasticsearch:${ELASTICSEARCH_VERSION}
+#        restart: always
+#        ports:
+#            - "9300:9300"
+#            - "9200:9200"
+#        environment:
+#            discovery.type: single-node
+#        volumes:
+#            - ./data/elasticsearch:/usr/share/elasticsearch/data
+#        networks:
+#            - dev-network
+#        container_name: elasticsearch
 networks:
-  dev-network:
-    driver: bridge
+    dev-network:
+        driver: bridge
