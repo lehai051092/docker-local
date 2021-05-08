@@ -55,7 +55,7 @@ services:
         stdin_open: true
         restart: always
         container_name: cli
-    mariadb:
+    db:
         image: mariadb:${MARIADB_VERSION}
         restart: always
         environment:
@@ -68,7 +68,7 @@ services:
             - ./data/mariadb:/var/lib/mysql:delegated
         networks:
             - dev-network
-        container_name: mariadb
+        container_name: db
     adminer:
         image: adminer
         environment:
