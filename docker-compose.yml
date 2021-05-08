@@ -19,6 +19,9 @@ services:
                 max-size: 10m
         networks:
             - dev-network
+        environment:
+            UID: ${UID}
+            GID: ${GID}
     php:
         image: mskumji5/php-fpm:${PHP_VERSION}
         restart: always
@@ -30,6 +33,8 @@ services:
             - "9000:9000"
         container_name: php
         environment:
+            UID: ${UID}
+            GID: ${GID}
             FPM_LISTEN_DEFAULT: 1
         networks:
             - dev-network
@@ -37,6 +42,9 @@ services:
         image: mskumji5/php-cli:${PHP_VERSION}
         networks:
             - dev-network
+        environment:
+            UID: ${UID}
+            GID: ${GID}
         volumes_from:
             - php
         volumes:
