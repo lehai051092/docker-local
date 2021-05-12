@@ -8,7 +8,7 @@
 - docker/nginx/site-enable/...conf
 
 upstream fastcgi_backend {
-    server php73:9000;
+    server php:9000;
 }
 
 server {
@@ -40,7 +40,7 @@ server {
     location ~ \.php$ {
         try_files $uri =404;
         fastcgi_split_path_info ^(.+\.php)(/.+)$;
-        fastcgi_pass php73:9000;
+        fastcgi_pass php:9000;
         fastcgi_index index.php;
         include fastcgi_params;
         fastcgi_param SCRIPT_FILENAME $document_root$fastcgi_script_name;
@@ -56,7 +56,7 @@ server {
 
 # Tạo xong restart lại nginx và php
 - docker restart nginx
-- docker restart php73
+- docker restart php
 
 # Config và test Elasticsearch local
 - Stores -> Configuration -> Catalog -> Catalog -> Catalog Search
